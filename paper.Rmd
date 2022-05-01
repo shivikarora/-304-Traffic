@@ -1,0 +1,519 @@
+---
+title: "My title"
+subtitle: "My subtitle if needed"
+author: 
+  - Shivik Arora
+thanks: "Code and data are available at: LINK."
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+output:
+  bookdown::pdf_document2
+toc: FALSE
+bibliography: references.bib
+---
+
+
+```{r global-options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE)
+
+###install.packages("bookdown")
+###install.packages("tidyverse")
+###install.packages("palmerpenguins")
+library(tidyverse)
+library(palmerpenguins)
+library(ggplot2)
+data = read.csv("/Users/shivikarora/Desktop/Fourth\ year./STA304/Motor\ Vehicle\ Collisions\ with\ KSI\ Data.csv")
+```
+
+```{r, }
+categories <- (data$YEAR)
+years <- table(categories)
+barplot(years,
+main = "ACCIDENTS BY YEAR.",
+xlab = "YEAR", col= c('black'))
+
+```
+
+```{r, }
+categories <- unique(data$AUTOMOBILE)
+table(categories)
+
+```
+
+```{r}
+#categories <- (data$INVTYPE)
+#table(categories)
+#sum(categories == "")
+
+#categories <- (data$ACCLASS)
+#table(categories)
+
+#df[df$INVTYPE == 'Pedestrian - Not Hit' & df$ACCLASS == 'Non-Fatal Injury', ]
+```
+
+```{r, }
+df <-dplyr::select(data, -c('DATE', 'TIME','OFFSET', 'WARDNUM','LOCCOORD','ACCLOC','TRAFFCTL', 'RDSFCOND', 'INITDIR', 'VEHTYPE', 'MANOEUVER','POLICE_DIVISION', 'HOOD_ID', 'NEIGHBOURHOOD', 'ObjectId', 'STREET1', 'STREET2', 'ROAD_CLASS', 'ACCNUM', 'X_id', 'latitude','longitude', 'altitude', 'geometry', 'FATAL_NO', 'DRIVACT', 'DRIVCOND', 'PEDTYPE', 'CYCLISTYPE', 'PEDACT', 'CYCACT', 'PEDCOND', 'CYCCOND', 'INVAGE', 'IMPACTYPE', 'DIVISION', 'DISABILITY','ACCLASS'))
+```
+
+```{r, }
+df <- subset(df, VISIBILITY != "")
+df <- subset(df, LIGHT != "Other")
+df <- subset(df, INJURY != "None")
+df <- subset(df, INJURY != "")
+df <- subset(df, INVTYPE != "Vehicle Owner")
+df <- subset(df, INVTYPE != "Other Property Owner")
+```
+
+```{r, }
+
+df <- df %>%
+   mutate(across(c("PEDESTRIAN"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("MOTORCYCLE"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("PASSENGER"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("REDLIGHT"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("SPEEDING"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("TRSN_CITY_VEH"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("TRUCK"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("ALCOHOL"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("CYCLIST"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("EMERG_VEH"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("AG_DRIV"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("AUTOMOBILE"), ~ifelse(.=="", "No", as.character(.))))
+df <- df %>%
+   mutate(across(c("INJURY"), ~ifelse(.=="Minimal", "Minor", as.character(.))))
+df <- df %>%
+   mutate(across(c("DISTRICT"), ~ifelse(.=="", "NA", as.character(.))))
+df <- df %>%
+   mutate(across(c("LIGHT"), ~ifelse(.=="Other", "NA", as.character(.))))
+df <- df %>%
+   mutate(across(c("LIGHT"), ~ifelse(.=="Dark, artificial", "Dark", as.character(.))))
+df <- df %>%
+   mutate(across(c("LIGHT"), ~ifelse(.=="Dawn, artificial", "Dawn", as.character(.))))
+df <- df %>%
+   mutate(across(c("LIGHT"), ~ifelse(.=="Daylight, artificial", "Daylight", as.character(.))))
+df <- df %>%
+   mutate(across(c("LIGHT"), ~ifelse(.=="Dusk, artificial", "Dusk", as.character(.))))
+df <- df %>%
+   mutate(across(c("VISIBILITY"), ~ifelse(.=="", "NA", as.character(.))))
+
+```
+
+
+```{r, }
+categories <- (df$INVTYPE)
+table(categories)
+#summary(df)
+```
+
+```{r,include=FALSE}
+str(df)
+df[df$ALCOHOL == 'Yes' & df$AG_DRIV == 'Yes', ]
+```
+
+
+```{r, }
+#xtabs(~ ALCOHOL + HOUR + INJURY, data = df)
+alcohol.data <- xtabs(~ INJURY + ALCOHOL, data = df)
+#xtabs(~ ALCOHOL + REDLIGHT, data = df)
+#alcohol.data1 <- alcohol.data[-c(2)]
+alcohol.data
+
+#install.packages("sjPlot")
+library(scales)
+library(sjPlot)
+
+barplot(alcohol.data,
+main = "INJURY TYPES IN ACCIDENTS WITH ALCOHOL INVOLVEMENT",
+xlab = "ALCOHOL",
+col = c("red", "Yellow","Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+
+#sjPlot::plot_xtab(alcohol.data, bar.pos = "stack", margin = "row")
+
+```
+
+```{r, }
+agg.data <- xtabs(~ INJURY + AG_DRIV, data = df)
+agg.data
+
+
+barplot(agg.data,
+main = "INJURY TYPES IN ACCIDENTS RELATED TO AGGRESSIVE DRIVING",
+xlab = "AGGRESSIVE DRIVING",
+col = c("red", "Yellow", "Green")
+)
+
+legend("bottomright", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+
+```{r, }
+speed.data <- xtabs(~ INJURY + SPEEDING, data = df)
+speed.data
+
+barplot(speed.data,
+main = "INJURY TYPES IN ACCIDENTS RELATED TO SPEEDING",
+xlab = "SPEEDING",
+col = c("red", "Yellow", "Green")
+)
+legend("topright", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+
+```
+```{r, }
+hour.data <- xtabs(~ INJURY + HOUR, data = df)
+hour.data
+
+barplot(hour.data,
+main = "INJURY TYPES BY HOUR",
+xlab = "HOUR",
+col = c("red", "yellow", "green")
+)
+legend("topleft", 
+     legend = c("Fatal", "Major", "Minor"), 
+     fill = c("red", "yellow", "green"))
+
+hourdata <- as.data.frame(hour.data)
+
+#hourdata %>%
+ # ggplot(aes(x = HOUR, y = frequency(HOUR), fill=INJURY))+
+  #geom_col(position="dodge") +
+  #labs(title="Stacked Barplot: Side By Side with Labels",
+   #     x="Continent", y= "Mean LifeExp")+
+  #geom_text(aes(label = round(frequency(HOUR), 5000)))
+
+hourdata %>%
+  ggplot(aes(HOUR,Freq, fill=INJURY))+
+  geom_col(position="dodge")  +
+  labs(title="Stacked Barplot: Side By Side",
+        x="Continent", y= "Mean LifeExp")
+geom_text(aes(label = Freq), vjust = -0.2)
+
+
+```
+```{r, }
+light.data <- xtabs(~ INJURY + LIGHT, data = df)
+light.data
+
+barplot(light.data,
+main = "INJURY TYPES BY LIGHT CONDITIONS",
+xlab = "LIGHT CONDITIONS", 
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+```{r, }
+new.data <- xtabs(~ ALCOHOL + HOUR, data = df)
+new.data
+
+barplot(new.data,
+main = "ALCOHOL RELATED COLLISIONS BY HOUR",
+xlab = "HOUR",
+col = c("Green", "Red")
+)
+legend("topleft", 
+       legend = c("No", "Yes"), 
+       fill = c( "green", "red"))
+```
+```{r, }
+dffinal <-dplyr::select(df, c("HOUR", "ALCOHOL", "INJURY"))
+dffinal
+dffinal <- dffinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="12" & .<="19", "EVENING/AFTERNOON", as.character(.))))
+
+dffinal <- dffinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="20" & .<="23"| .=="0", "NIGHT", as.character(.))))
+
+dffinal <- dffinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="1" & .<="3", "NIGHT", as.character(.))))
+
+dffinal <- dffinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.=="4" | .=="5" |  .=="6" | .=="7" | .=="8"| .=="9" | .=="10" | .=="11", "MORNING", as.character(.))))
+
+dffinal
+```
+
+```{r, }
+dffinal1 <- subset(dffinal, ALCOHOL != "Yes")
+dffinal1
+
+dffinalno = subset(dffinal1, select = -c(ALCOHOL) )
+dffinalno
+
+dffinalnotable <- xtabs(~ INJURY + HOUR, data = dffinalno)
+dffinalnotable
+
+
+barplot(dffinalnotable,
+main = "NON-ALCOHOL RELATED COLLISIONS BY HOUR",
+xlab = "INJURY",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+```{r}
+dffinal2 <- subset(dffinal, ALCOHOL != "No")
+dffinal2
+
+dffinalno2 = subset(dffinal2, select = -c(ALCOHOL) )
+dffinalno2
+
+dffinalnotable2 <- xtabs(~ INJURY + HOUR, data = dffinalno2)
+dffinalnotable2
+
+
+barplot(dffinalnotable2,
+main = "ALCOHOL RELATED COLLISIONS BY HOUR",
+xlab = "INJURY",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+
+```{r, }
+dffinal4 <- subset(dffinal, HOUR == "MORNING")
+dffinal4
+
+dffinalnotable4 <- xtabs(~ INJURY + ALCOHOL, data = dffinal4)
+dffinalnotable4
+
+
+barplot(dffinalnotable4,
+main = "INJURY TYPES FOR MORNING COLLISIONS WITH AND WITHOUT ALCOHOL INVOLVEMENT",
+xlab = "ALCOHOL",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+```{r, }
+dffinal5 <- subset(dffinal, HOUR == "NIGHT")
+dffinal5
+
+dffinalnotable5 <- xtabs(~ INJURY + ALCOHOL, data = dffinal5)
+dffinalnotable5
+
+
+barplot(dffinalnotable5,
+main = "INJURY TYPES FOR NIGHT COLLISIONS WITH AND WITHOUT ALCOHOL INVOLVEMENT",
+xlab = "ALCOHOL",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+```{r, }
+dffinal6 <- subset(dffinal, HOUR == "EVENING/AFTERNOON")
+dffinal6
+
+dffinalnotable6 <- xtabs(~ INJURY + ALCOHOL, data = dffinal6)
+dffinalnotable6
+
+
+barplot(dffinalnotable6,
+main = "INJURY TYPES FOR EVENING/AFTERNOON COLLISIONS WITH AND WITHOUT ALCOHOL INVOLVEMENT",
+xlab = "ALCOHOL",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+
+#ggplot(dffinal6, aes(x = ALCOHOL, y =  fill = INJURY)) +
+#  geom_col(position = "dodge") +
+ # geom_text(
+  #  aes(label = INJURY),
+   # colour = "white", size = 3,
+    #vjust = 1.5, position = position_dodge(.9)
+ # )
+```
+```{r, }
+new.data1 <- xtabs(~ AG_DRIV + HOUR, data = df)
+new.data1
+
+barplot(new.data1,
+main = "AGGRESSIVE DRIVING RELATED COLLISIONS BY HOUR",
+xlab = "HOUR",
+col = c("Green", "Red")
+)
+legend("topleft", 
+       legend = c("No", "Yes"), 
+       fill = c( "green", "red"))
+```
+
+```{r, }
+agfinal <-dplyr::select(df, c("HOUR", "AG_DRIV", "INJURY"))
+agfinal
+agfinal <- agfinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="12" & .<="19", "EVENING/AFTERNOON", as.character(.))))
+
+agfinal <- agfinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="20" & .<="23"| .=="0", "NIGHT", as.character(.))))
+
+agfinal <- agfinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="1" & .<="3", "NIGHT", as.character(.))))
+
+agfinal <- agfinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.=="4" | .=="5" |  .=="6" | .=="7" | .=="8"| .=="9" | .=="10" | .=="11", "MORNING", as.character(.))))
+
+agfinal
+```
+```{r, }
+agfinal1 <- subset(agfinal, HOUR == "MORNING")
+agfinal1
+
+agfinaltable1 <- xtabs(~ INJURY + AG_DRIV, data = agfinal1)
+agfinaltable1
+
+
+barplot(agfinaltable1,
+main = "INJURY TYPES FOR MORNING COLLISIONS BY AGGRESSIVE DRIVING",
+xlab = "AGGRESSIVE DRIVING",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+
+```{r, }
+agfinal2 <- subset(agfinal, HOUR == "EVENING/AFTERNOON")
+agfinal2
+
+agfinaltable2 <- xtabs(~ INJURY + AG_DRIV, data = agfinal2)
+agfinaltable2
+
+
+barplot(agfinaltable2,
+main = "IINJURY TYPES FOR AFTERNOON/EVENING COLLISIONS BY AGGRESSIVE DRIVING",
+xlab = "AGGRESSIVE DRIVING",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+```{r, }
+agfinal3 <- subset(agfinal, HOUR == "NIGHT")
+agfinal3
+
+agfinaltable3 <- xtabs(~ INJURY + AG_DRIV, data = agfinal2)
+agfinaltable3
+
+
+barplot(agfinaltable3,
+main = "INJURY TYPES FOR NIGHT COLLISIONS BY AGGRESSIVE DRIVING",
+xlab = "AGGRESSIVE DRIVING",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+```{r, }
+new.data2 <- xtabs(~ SPEEDING + HOUR, data = df)
+new.data2
+
+barplot(new.data2,
+main = "SPEEDING RELATED COLLISIONS BY HOUR",
+xlab = "HOUR",
+col = c("Green", "Red")
+)
+legend("topleft", 
+       legend = c("No", "Yes"), 
+       fill = c( "green", "red"))
+```
+```{r, }
+spfinal <-dplyr::select(df, c("HOUR", "SPEEDING", "INJURY"))
+spfinal
+spfinal <- spfinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="12" & .<="19", "EVENING/AFTERNOON", as.character(.))))
+
+spfinal <- spfinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="20" & .<="23"| .=="0", "NIGHT", as.character(.))))
+
+spfinal <- spfinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.>="1" & .<="3", "NIGHT", as.character(.))))
+
+spfinal <- spfinal %>%
+   mutate(across(c("HOUR"), ~ifelse(.=="4" | .=="5" |  .=="6" | .=="7" | .=="8"| .=="9" | .=="10" | .=="11", "MORNING", as.character(.))))
+
+spfinal
+```
+```{r, }
+spfinal1 <- subset(spfinal, HOUR == "NIGHT")
+spfinal1
+
+spfinaltable1 <- xtabs(~ INJURY + SPEEDING, data = spfinal1)
+spfinaltable1
+
+
+barplot(spfinaltable1,
+main = "INJURY TYPES FOR NIGHT COLLISIONS BY SPEEDING",
+xlab = "SPEEDING",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+```{r, }
+spfinal2 <- subset(spfinal, HOUR == "MORNING")
+spfinal2
+
+spfinaltable2 <- xtabs(~ INJURY + SPEEDING, data = spfinal2)
+spfinaltable2
+
+
+barplot(spfinaltable2,
+main = "INJURY TYPES FOR MORNING COLLISIONS BY SPEEDING",
+xlab = "SPEEDING",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+```{r, }
+spfinal3 <- subset(spfinal, HOUR == "EVENING/AFTERNOON")
+spfinal3
+
+spfinaltable3 <- xtabs(~ INJURY + SPEEDING, data = spfinal3)
+spfinaltable3
+
+
+barplot(spfinaltable3,
+main = "INJURY TYPES FOR EVENING/AFTERNOON COLLISIONS BY SPEEDING",
+xlab = "SPEEDING",
+col = c("red", "Yellow", "Green")
+)
+legend("topleft", 
+       legend = c("Fatal", "Major", "Minor"), 
+       fill = c("red", "yellow", "green"))
+```
+
